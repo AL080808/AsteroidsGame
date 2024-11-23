@@ -1,76 +1,127 @@
-class Floater //Do NOT modify the Floater class! Make changes in the Spaceship class 
-{   
-  protected int corners;  //the number of corners, a triangular floater has 3   
-  protected int[] xCorners;   
-  protected int[] yCorners;   
-  protected int myColor;   
-  protected double myCenterX, myCenterY; //holds center coordinates   
-  protected double myXspeed, myYspeed; //holds the speed of travel in the x and y directions   
-  protected double myPointDirection; //holds current direction the ship is pointing in degrees    
+Spaceship ship;
+Star[] stars;
 
-  //Accelerates the floater in the direction it is pointing (myPointDirection)   
-  public void accelerate (double dAmount)   
-  {          
-    //convert the current direction the floater is pointing to radians    
-    double dRadians =myPointDirection*(Math.PI/180);     
-    //change coordinates of direction of travel    
-    myXspeed += ((dAmount) * Math.cos(dRadians));    
-    myYspeed += ((dAmount) * Math.sin(dRadians));       
-  }   
-  public void turn (double degreesOfRotation)   
-  {     
-    //rotates the floater by a given number of degrees    
-    myPointDirection+=degreesOfRotation;   
-  }   
-  public void move ()   //move the floater in the current direction of travel
-  {      
-    //change the x and y coordinates by myXspeed and myYspeed       
-    myCenterX += myXspeed;    
-    myCenterY += myYspeed;     
+void setup() {
+  size(800, 600);
+  ship = new Spaceship();
+  stars = new Star[100];
+  for (int i = 0; i < stars.length; i++) {
+    stars[i] = new Star();
+  }
+}
 
-    //wrap around screen    
-    if(myCenterX >width)
-    {     
-      myCenterX = 0;    
-    }    
-    else if (myCenterX<0)
-    {     
-      myCenterX = width;    
-    }    
-    if(myCenterY >height)
-    {    
-      myCenterY = 0;    
-    } 
-    
-    else if (myCenterY < 0)
-    {     
-      myCenterY = height;    
-    }   
-  }   
-  public void show ()  //Draws the floater at the current position  
-  {             
-    fill(myColor);   
-    stroke(myColor);    
-    
-    //translate the (x,y) center of the ship to the correct position
-    translate((float)myCenterX, (float)myCenterY);
+void draw() {
+  background(0);
+  for (Star star : stars) {
+    star.show();
+  }
+  ship.move();
+  ship.show();
+  fill(255);
+  textSize(18);
+  textAlign(CENTER);
+  text("Use Arrow Keys to Move\n[Up: Up, Down: Down, Left: Left, Right: Right, H: Hyperspace]", width / 2, height - 50);
+}
 
-    //convert degrees to radians for rotate()     
-    float dRadians = (float)(myPointDirection*(Math.PI/180));
-    
-    //rotate so that the polygon will be drawn in the correct direction
-    rotate(dRadians);
-    
-    //draw the polygon
+void keyPressed() {
+  if (keyCode == UP) {
+    ship.moveUp();
+  }
+  if (keyCode == DOWN) {
+    ship.moveDown();
+  }
+  if (keyCode == LEFT) {
+    ship.moveLeft();
+  }
+  if (keyCode == RIGHT) {
+    ship.moveRight();
+  }
+  if (key == 'h' || key == 'H') {
+    ship.hyperspace();
+  }
+}
+
+abstract class Floater {
+  protected float x, y, speed, pointDirection;
+  protected int[] cornersX, cornersY;
+  protected int bodyColor, detailColor;
+
+  void move() {
+    if (x > width) x = 0;
+    if (x < 0) x = width;
+    if (y > height) y = 0;
+    if (y < 0) y = height;
+  }
+
+  void show() {}
+}
+
+class Spaceship extends Floater {
+  Spaceship() {
+    x = width / 2;
+    y = height / 2;
+    speed = 5;
+    pointDirection = 0;
+    cornersX = new int[]{20, -15, -10, -15, 20};
+    cornersY = new int[]{0, -10, 0, 10, 0};
+    bodyColor = color(0, 150, 255);
+    detailColor = color(200, 50, 50);
+  }
+
+  void moveUp() {
+    y -= speed;
+  }
+
+  void moveDown() {
+    y += speed;
+  }
+
+  void moveLeft() {
+    x -= speed;
+  }
+
+  void moveRight() {
+    x += speed;
+  }
+
+  void hyperspace() {
+    x = (float)(Math.random() * width);
+    y = (float)(Math.random() * height);
+    pointDirection = (float)(Math.random() * 360);
+  }
+
+  void show() {
+    pushMatrix();
+    translate(x, y);
+    rotate(radians(pointDirection));
+    fill(bodyColor);
+    stroke(255);
+    strokeWeight(2);
     beginShape();
-    for (int nI = 0; nI < corners; nI++)
-    {
-      vertex(xCorners[nI], yCorners[nI]);
+    for (int i = 0; i < cornersX.length; i++) {
+      vertex(cornersX[i], cornersY[i]);
     }
     endShape(CLOSE);
 
-    //"unrotate" and "untranslate" in reverse order
-    rotate(-1*dRadians);
-    translate(-1*(float)myCenterX, -1*(float)myCenterY);
-  }   
-} 
+    fill(detailColor);
+    ellipse(5, 0, 10, 10);
+    popMatrix();
+  }
+}
+
+class Star {
+  float x, y;
+  int brightness;
+
+  Star() {
+    x = (float)(Math.random() * width);
+    y = (float)(Math.random() * height);
+    brightness = (int)(Math.random() * 255);
+  }
+
+  void show() {
+    fill(brightness);
+    noStroke();
+    ellipse(x, y, 3, 3);
+  }
+}
