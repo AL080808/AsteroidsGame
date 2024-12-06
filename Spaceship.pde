@@ -1,52 +1,48 @@
 class Spaceship extends Floater {
   public Spaceship() {
-    x = width / 2;
-    y = height / 2;
-    speed = 5;
-    pointDirection = 0;
-    cornersX = new int[] { 20, -15, -10, -15, 20 };
-    cornersY = new int[] { 0, -10, 0, 10, 0 };
-    bodyColor = color(0, 150, 255);
-    detailColor = color(200, 50, 50);
+    corners = 5;
+    xCorners = new int[] { 20, -15, -10, -15, 20 }; // Custom shape
+    yCorners = new int[] { 0, -10, 0, 10, 0 };
+    myColor = color(0, 150, 255);
+    myCenterX = width / 2;
+    myCenterY = height / 2;
+    myXspeed = 0;
+    myYspeed = 0;
+    myPointDirection = 0;
   }
 
-  public void moveUp() {
-    y -= speed;
+  // Accelerate the spaceship
+  public void accelerate() {
+    double radians = myPointDirection * (Math.PI / 180);
+    myXspeed += 0.1 * Math.cos(radians);
+    myYspeed += 0.1 * Math.sin(radians);
   }
 
-  public void moveDown() {
-    y += speed;
+  // Decelerate the spaceship
+  public void decelerate() {
+    myXspeed *= 0.9; // Reduce speed
+    myYspeed *= 0.9;
   }
 
-  public void moveLeft() {
-    x -= speed;
+  // Move the spaceship
+  public void move() {
+    myCenterX += myXspeed;
+    myCenterY += myYspeed;
+
+    // Wrap around the screen
+    if (myCenterX > width) myCenterX = 0;
+    if (myCenterX < 0) myCenterX = width;
+    if (myCenterY > height) myCenterY = 0;
+    if (myCenterY < 0) myCenterY = height;
   }
 
-  public void moveRight() {
-    x += speed;
-  }
-
+  // Hyperspace jump to a random position
   public void hyperspace() {
-    x = (float) (Math.random() * width);
-    y = (float) (Math.random() * height);
-    pointDirection = (float) (Math.random() * 360);
-  }
-
-  public void show() {
-    pushMatrix();
-    translate(x, y);
-    rotate(radians(pointDirection));
-    fill(bodyColor);
-    stroke(255);
-    strokeWeight(2);
-    beginShape();
-    for (int i = 0; i < cornersX.length; i++) {
-      vertex(cornersX[i], cornersY[i]);
-    }
-    endShape(CLOSE);
-
-    fill(detailColor);
-    ellipse(5, 0, 10, 10);
-    popMatrix();
+    myCenterX = Math.random() * width;
+    myCenterY = Math.random() * height;
+    myPointDirection = Math.random() * 360;
+    myXspeed = 0;
+    myYspeed = 0; // Reset speed after hyperspace
   }
 }
+
