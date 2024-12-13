@@ -1,18 +1,16 @@
+ArrayList<Bullet> bullets;
+ArrayList<Asteroid> asteroids;
 Spaceship ship;
-Star[] stars;
-ArrayList<Asteroid> asteroids; // ArrayList to manage asteroids
-int spawnTimer = 0; // Timer for spawning new asteroids
-int spawnInterval = 200; // Interval for spawning new asteroids (frames)
+int score = 0;
 
 void setup() {
   size(800, 600);
   ship = new Spaceship();
-  stars = new Star[100];
-  for (int i = 0; i < stars.length; i++) {
-    stars[i] = new Star();
-  }
-  asteroids = new ArrayList<Asteroid>();
-  for (int i = 0; i < 5; i++) { // Add initial asteroids
+  bullets = new ArrayList<>();
+  asteroids = new ArrayList<>();
+
+  // Add some initial asteroids
+  for (int i = 0; i < 5; i++) {
     asteroids.add(new Asteroid());
   }
 }
@@ -21,57 +19,61 @@ void draw() {
   background(0);
 
   // Draw stars
-  for (Star star : stars) {
+  for (int i = 0; i < 100; i++) {
+    Star star = new Star();
     star.show();
   }
 
-  // Move and draw asteroids
-  for (int i = asteroids.size() - 1; i >= 0; i--) {
-    Asteroid asteroid = asteroids.get(i);
-    asteroid.moveAsteroid(); // Use the custom move function
-    asteroid.show();
-
-    // Check for collision
-    float distance = dist((float) ship.myCenterX, (float) ship.myCenterY,
-                          asteroid.getCenterX(), asteroid.getCenterY());
-    if (distance < 20) { // Collision threshold
-      println("Collision detected! Asteroid removed.");
-      asteroids.remove(i); // Remove asteroid from ArrayList
-    }
-  }
-
-  // Spawn new asteroids periodically
-  spawnTimer++;
-  if (spawnTimer >= spawnInterval) {
-    asteroids.add(new Asteroid());
-    spawnTimer = 0; // Reset timer
-  }
-
-  // Move and draw the spaceship
+  // Move and show the spaceship
   ship.move();
   ship.show();
 
-  // Instructions
+  // Move and show bullets
+  for (int i = bullets.size() - 1; i >= 0; i--) {
+    Bullet b = bullets.get(i);
+    b.move();
+    b.show();
+
+    // Remove bullets that are no longer alive
+    if (b.isAlive() == false) bullets.remove(i);
+  }
+
+  // Move and show asteroids
+  for (int i = asteroids.size() - 1; i >= 0; i--) {
+    Asteroid a = asteroids.get(i);
+    a.moveAsteroid();
+    a.show();
+
+    // Check for collisions with bullets
+    for (int j = bullets.size() - 1; j >= 0; j--) {
+      Bullet b = bullets.get(j);
+      if (dist((float) a.getCenterX(), (float) a.getCenterY(), (float) b.myCenterX, (float) b.myCenterY) < 20) {
+        asteroids.remove(i);
+        bullets.remove(j);
+        score += 10;
+        break;
+      }
+    }
+  }
+
+  // Regenerate asteroids if the count falls below 5
+  if (asteroids.size() < 5) {
+    for (int i = 0; i < 3; i++) { // Add 3 new asteroids
+      asteroids.add(new Asteroid());
+    }
+  }
+
+  // Display the score
   fill(255);
-  textSize(18);
-  textAlign(CENTER);
-  text("Use Arrow Keys to Move\n[Up: Accelerate, Down: Decelerate, Left/Right: Turn, H: Hyperspace]", width / 2, height - 50);
+  textSize(20);
+  text("Score: " + score, 10, 30);
 }
 
 void keyPressed() {
-  if (keyCode == UP) {
-    ship.accelerate(); // Accelerate forward
-  }
-  if (keyCode == DOWN) {
-    ship.decelerate(); // Slow down
-  }
-  if (keyCode == LEFT) {
-    ship.turn(-10); // Turn left
-  }
-  if (keyCode == RIGHT) {
-    ship.turn(10); // Turn right
-  }
-  if (key == 'h' || key == 'H') {
-    ship.hyperspace(); // Teleport to a random location
-  }
+  if (key == 'w') ship.accelerate();
+  if (key == 's') ship.decelerate();
+  if (key == 'a') ship.turn(-15);
+  if (key == 'd') ship.turn(15);
+  if (key == ' ') bullets.add(new Bullet(ship));
+  if (key == 'h') ship.hyperspace();
 }
